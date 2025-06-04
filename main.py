@@ -3,34 +3,25 @@ from pydantic import BaseModel
 import numpy as np
 import joblib
 from tensorflow.keras.models import load_model
+from fastapi.responses import HTMLResponse
 
-# Carregar modelo e scaler
-model = load_model('./models/lstm_model.h5')
-scaler = joblib.load('./models/scaler.pkl')
+app = FastAPI()
 
-# Parâmetros da janela
+model = load_model("models/lstm_model.h5")
+scaler = joblib.load("models/scaler.pkl")
+
 WINDOW_SIZE = model.input_shape[1]
 
-app = FastAPI(title="API de Previsão de Ações com LSTM")
-
-# Definir schema da entrada
 class InputData(BaseModel):
-    values: list[float]  # lista com os últimos N preços normalizados (janela)
+    values: list[float]
+
+@app.get("/", response_class=HTMLResponse)
+def root():
+    return "<h2>API LSTM rodando! Vá para /docs para testar.</h2>"
 
 @app.post("/predict")
 def predict(data: InputData):
-    input_values = np.array(data.values)
-
-    if len(input_values) != WINDOW_SIZE:
-        return {"erro": f"A sequência deve conter {WINDOW_SIZE} valores."}
-
-    # Pré-processar dados
-    input_scaled = np.array(input_values).reshape(1, WINDOW_SIZE, 1)
-
-    # Prever
-    prediction_scaled = model.predict(input_scaled)
-    prediction = scaler.inverse_transform(prediction_scaled)[0][0]
-
-    return {
-        "previsao": float(prediction)
-    }
+    input_data = np.array(data.values).reshape(1, WINDOW_SIZE, 1)
+    prediction = model.predict(input_data)
+    result = scaler.inverse_transform(prediction)[0][0]
+    return {"previsao": float(result)}
