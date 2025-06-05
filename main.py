@@ -25,3 +25,10 @@ def predict(data: InputData):
     prediction = model.predict(input_data)
     result = scaler.inverse_transform(prediction)[0][0]
     return {"previsao": float(result)}
+
+import os
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
