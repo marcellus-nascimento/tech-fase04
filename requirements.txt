@@ -4,3 +4,4 @@ fastapi~=0.115.12
 scikit-learn~=1.6.1
 fastapi
 uvicorn==0.23.2
+matplotlib
